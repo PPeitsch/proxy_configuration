@@ -22,10 +22,10 @@ import sys
 
 APT_CONF = '/etc/apt/apt.conf'
 APT_BACKUP = './.backup_proxy/apt.txt'
-BASH_BASHRC = r'/etc/bash.bashrc'
-BASH_BACKUP = r'./.backup_proxy/bash.txt'
-ENVIRONMENT = r'/etc/environment'
-ENV_BACKUP = r'./.backup_proxy/env.txt'
+BASH_BASHRC = '/etc/bash.bashrc'
+BASH_BACKUP = './.backup_proxy/bash.txt'
+ENVIRONMENT = '/etc/environment'
+ENV_BACKUP = './.backup_proxy/env.txt'
 
 
 def write_to_apt(proxy, port, username, password, flag):
@@ -116,16 +116,16 @@ def set_proxy(flag):
 
 
 def view_proxy():
-    # finds the size of apt file
-    size = os.path.getsize(APT_CONF)
-    if size:
-        filepointer = open(APT_CONF, "r")
-        string = filepointer.readline()
-        print('\nHTTP Proxy: ' + string[string.rfind('@') + 1: string.rfind(':')])
-        print('Port: ' + string[string.rfind(':') + 1: string.rfind('/')])
-        print('Username: ' + string.split('://')[1].split(':')[0])
-        print('Password: ' + '*' * len(string[string.rfind(':', 0, string.rfind('@')) + 1: string.rfind('@')]))
-        filepointer.close()
+    """
+    Displays the current proxy configuration.
+    """
+    if os.path.getsize(APT_CONF):
+        with open(APT_CONF, "r") as filepointer:
+            line = filepointer.readline()
+            print('\nHTTP Proxy:', line[line.rfind('@') + 1:line.rfind(':')])
+            print('Port:', line[line.rfind(':') + 1:line.rfind('/')])
+            print('Username:', line.split('://')[1].split(':')[0])
+            print('Password:', '*' * len(line[line.rfind(':', 0, line.rfind('@')) + 1:line.rfind('@')]))
     else:
         print("No proxy is set")
 
