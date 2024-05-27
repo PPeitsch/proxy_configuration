@@ -98,6 +98,42 @@ def write_to_bashrc(proxy, port, username, password, flag):
             filepointer.write(f'export socks_proxy="socks://{username}:{password}@{proxy}:{port}/"\n')
 
 
+def write_to_snap(proxy, port, username, password, flag):
+    """
+    Writes the proxy configuration to Snap.
+
+    :param proxy: Proxy address
+    :param port: Proxy port
+    :param username: Username for authentication
+    :param password: Password for authentication
+    :param flag: Flag indicating whether to remove the configuration
+    """
+    if flag:
+        os.system("snap set system proxy.http=''")
+        os.system("snap set system proxy.https=''")
+    else:
+        os.system(f"snap set system proxy.http=http://{username}:{password}@{proxy}:{port}")
+        os.system(f"snap set system proxy.https=https://{username}:{password}@{proxy}:{port}")
+
+
+def write_to_git(proxy, port, username, password, flag):
+    """
+    Writes the proxy configuration to Git.
+
+    :param proxy: Proxy address
+    :param port: Proxy port
+    :param username: Username for authentication
+    :param password: Password for authentication
+    :param flag: Flag indicating whether to remove the configuration
+    """
+    if flag:
+        os.system("git config --global --unset http.proxy")
+        os.system("git config --global --unset https.proxy")
+    else:
+        os.system(f"git config --global http.proxy http://{username}:{password}@{proxy}:{port}")
+        os.system(f"git config --global https.proxy https://{username}:{password}@{proxy}:{port}")
+
+
 def set_proxy(flag):
     """
     Sets or removes the proxy configuration.
@@ -110,9 +146,12 @@ def set_proxy(flag):
         port = input("Enter port: ")
         username = input("Enter username: ")
         password = getpass.getpass("Enter password: ")
+
     write_to_apt(proxy, port, username, password, flag)
     write_to_env(proxy, port, username, password, flag)
     write_to_bashrc(proxy, port, username, password, flag)
+    write_to_snap(proxy, port, username, password, flag)
+    write_to_git(proxy, port, username, password, flag)
 
 
 def view_proxy():
