@@ -46,30 +46,30 @@ def write_to_apt(proxy, port, username, password, flag):
             filepointer.write(f'Acquire::socks::proxy "socks://{username}:{password}@{proxy}:{port}/";\n')
 
 
-# This function writes to the environment file
-# Fist deletes the lines containng http:// , https://, ftp://
-def writeToEnv(proxy, port, username, password, flag):
-    # find and delete line containing http://, https://, ftp://
+def write_to_env(proxy, port, username, password, flag):
+    """
+    Writes the proxy configuration to the environment file.
+
+    :param proxy: Proxy address
+    :param port: Proxy port
+    :param username: Username for authentication
+    :param password: Password for authentication
+    :param flag: Flag indicating whether to remove the configuration
+    """
     with open(ENVIRONMENT, "r+") as opened_file:
         lines = opened_file.readlines()
-        opened_file.seek(0)  # moves the file pointer to the beginning
+        opened_file.seek(0)
         for line in lines:
-            if r"http://" not in line and r"https://" not in line and r"ftp://" not in line and r"socks://" not in line:
+            if all(protocol not in line for protocol in ["http://", "https://", "ftp://", "socks://"]):
                 opened_file.write(line)
         opened_file.truncate()
 
-    # writing starts
     if not flag:
-        filepointer = open(ENVIRONMENT, "a")
-        filepointer.write(
-            'http_proxy="http://{0}:{1}@{2}:{3}/"\n'.format(username, password, proxy, port))
-        filepointer.write(
-            'https_proxy="https://{0}:{1}@{2}:{3}/"\n'.format(username, password, proxy, port))
-        filepointer.write(
-            'ftp_proxy="ftp://{0}:{1}@{2}:{3}/"\n'.format(username, password, proxy, port))
-        filepointer.write(
-            'socks_proxy="socks://{0}:{1}@{2}:{3}/"\n'.format(username, password, proxy, port))
-        filepointer.close()
+        with open(ENVIRONMENT, "a") as filepointer:
+            filepointer.write(f'http_proxy="http://{username}:{password}@{proxy}:{port}/"\n')
+            filepointer.write(f'https_proxy="https://{username}:{password}@{proxy}:{port}/"\n')
+            filepointer.write(f'ftp_proxy="ftp://{username}:{password}@{proxy}:{port}/"\n')
+            filepointer.write(f'socks_proxy="socks://{username}:{password}@{proxy}:{port}/"\n')
 
 
 # This function will write to the
@@ -105,7 +105,7 @@ def set_proxy(flag):
         username = input("Enter username : ")
         password = getpass.getpass("Enter password : ")
     write_to_apt(proxy, port, username, password, flag)
-    writeToEnv(proxy, port, username, password, flag)
+    write_to_env(proxy, port, username, password, flag)
     writeToBashrc(proxy, port, username, password, flag)
 
 
