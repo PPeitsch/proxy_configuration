@@ -1,169 +1,270 @@
-#!/usr/bin/python3
+#!/usr/bin/env python3
 
 """
-created by :
+Script to configure system-wide proxy settings on Linux distributions.
+
+created by:
 Nityananda Gohain 
 School of Engineering, Tezpur University
 27/10/17
-"""
 
-
-# run it as sudo
-
-
-"""
-Three files will be modified
-1) /etc/apt/apt.conf
-2) /etc/environment
-3) /etc/bash.bashrc
+Modified by:
+Pablo Peitsch
+Data Scientist, UNSAM, ARG
 """
 
 # This files takes the location as input and writes the proxy authentication
 
-import getpass  # for taking password input
-import shutil  # for copying file
-import sys
+import getpass
 import os
-import os.path  # for checking if file is present or not
+import shutil
+import sys
 
-apt_ = r'/etc/apt/apt.conf'
-apt_backup = r'./.backup_proxy/apt.txt'
-bash_ = r'/etc/bash.bashrc'
-bash_backup = r'./.backup_proxy/bash.txt'
-env_ = r'/etc/environment'
-env_backup = r'./.backup_proxy/env.txt'
-
-
-# This function directly writes to the apt.conf file
-def writeToApt(proxy, port, username, password, flag):
-    filepointer = open(apt_, "w")
-    if not flag:
-        filepointer.write(
-            'Acquire::http::proxy "http://{0}:{1}@{2}:{3}/";\n'.format(username, password, proxy, port))
-        filepointer.write(
-            'Acquire::https::proxy  "https://{0}:{1}@{2}:{3}/";\n'.format(username, password, proxy, port))
-        filepointer.write(
-            'Acquire::ftp::proxy  "ftp://{0}:{1}@{2}:{3}/";\n'.format(username, password, proxy, port))
-        filepointer.write(
-            'Acquire::socks::proxy  "socks://{0}:{1}@{2}:{3}/";\n'.format(username, password, proxy, port))
-    filepointer.close()
+APT_CONF = '/etc/apt/apt.conf'
+APT_BACKUP = './.backup_proxy/apt.txt'
+BASH_BASHRC = '/etc/bash.bashrc'
+BASH_BACKUP = './.backup_proxy/bash.txt'
+ENVIRONMENT = '/etc/environment'
+ENV_BACKUP = './.backup_proxy/env.txt'
 
 
-# This function writes to the environment file
-# Fist deletes the lines containng http:// , https://, ftp://
-def writeToEnv(proxy, port, username, password, flag):
-    # find and delete line containing http://, https://, ftp://
-    with open(env_, "r+") as opened_file:
-        lines = opened_file.readlines()
-        opened_file.seek(0)  # moves the file pointer to the beginning
-        for line in lines:
-            if r"http://" not in line and r"https://" not in line and r"ftp://" not in line and r"socks://" not in line:
-                opened_file.write(line)
-        opened_file.truncate()
+def write_to_apt(proxy, port, username, password, flag):
+    """
+    Writes the proxy configuration to the apt.conf file.
 
-    # writing starts
-    if not flag:
-        filepointer = open(env_, "a")
-        filepointer.write(
-            'http_proxy="http://{0}:{1}@{2}:{3}/"\n'.format(username, password, proxy, port))
-        filepointer.write(
-            'https_proxy="https://{0}:{1}@{2}:{3}/"\n'.format(username, password, proxy, port))
-        filepointer.write(
-            'ftp_proxy="ftp://{0}:{1}@{2}:{3}/"\n'.format(username, password, proxy, port))
-        filepointer.write(
-            'socks_proxy="socks://{0}:{1}@{2}:{3}/"\n'.format(username, password, proxy, port))
-        filepointer.close()
+    :param proxy: Proxy address
+    :param port: Proxy port
+    :param username: Username for authentication
+    :param password: Password for authentication
+    :param flag: Flag indicating whether to remove the configuration
+    """
+    with open(APT_CONF, "w") as filepointer:
+        if not flag:
+            filepointer.write(f'Acquire::http::proxy "http://{username}:{password}@{proxy}:{port}/";\n')
+            filepointer.write(f'Acquire::https::proxy "https://{username}:{password}@{proxy}:{port}/";\n')
+            filepointer.write(f'Acquire::ftp::proxy "ftp://{username}:{password}@{proxy}:{port}/";\n')
+            filepointer.write(f'Acquire::socks::proxy "socks://{username}:{password}@{proxy}:{port}/";\n')
 
 
-# This function will write to the
-def writeToBashrc(proxy, port, username, password, flag):
-    # find and delete http:// , https://, ftp://
-    with open(bash_, "r+") as opened_file:
+def write_to_env(proxy, port, username, password, flag):
+    """
+    Writes the proxy configuration to the environment file.
+
+    :param proxy: Proxy address
+    :param port: Proxy port
+    :param username: Username for authentication
+    :param password: Password for authentication
+    :param flag: Flag indicating whether to remove the configuration
+    """
+    with open(ENVIRONMENT, "r+") as opened_file:
         lines = opened_file.readlines()
         opened_file.seek(0)
         for line in lines:
-            if r"http://" not in line and r'"https://' not in line and r"ftp://" not in line and r"socks://" not in line:
+            if all(protocol not in line for protocol in ["http://", "https://", "ftp://", "socks://"]):
                 opened_file.write(line)
         opened_file.truncate()
 
-    # writing starts
     if not flag:
-        filepointer = open(bash_, "a")
-        filepointer.write(
-            'export http_proxy="http://{0}:{1}@{2}:{3}/"\n'.format(username, password, proxy, port))
-        filepointer.write(
-            'export https_proxy="https://{0}:{1}@{2}:{3}/"\n'.format(username, password, proxy, port))
-        filepointer.write(
-            'export ftp_proxy="ftp://{0}:{1}@{2}:{3}/"\n'.format(username, password, proxy, port))
-        filepointer.write(
-            'export socks_proxy="socks://{0}:{1}@{2}:{3}/"\n'.format(username, password, proxy, port))
-        filepointer.close()
+        with open(ENVIRONMENT, "a") as filepointer:
+            filepointer.write(f'http_proxy="http://{username}:{password}@{proxy}:{port}/"\n')
+            filepointer.write(f'https_proxy="https://{username}:{password}@{proxy}:{port}/"\n')
+            filepointer.write(f'ftp_proxy="ftp://{username}:{password}@{proxy}:{port}/"\n')
+            filepointer.write(f'socks_proxy="socks://{username}:{password}@{proxy}:{port}/"\n')
+
+
+def write_to_bashrc(proxy, port, username, password, flag):
+    """
+    Writes the proxy configuration to the bash.bashrc file.
+
+    :param proxy: Proxy address
+    :param port: Proxy port
+    :param username: Username for authentication
+    :param password: Password for authentication
+    :param flag: Flag indicating whether to remove the configuration
+    """
+    with open(BASH_BASHRC, "r+") as opened_file:
+        lines = opened_file.readlines()
+        opened_file.seek(0)
+        for line in lines:
+            if all(protocol not in line for protocol in ["http://", "https://", "ftp://", "socks://"]):
+                opened_file.write(line)
+        opened_file.truncate()
+
+    if not flag:
+        with open(BASH_BASHRC, "a") as filepointer:
+            filepointer.write(f'export http_proxy="http://{username}:{password}@{proxy}:{port}/"\n')
+            filepointer.write(f'export https_proxy="https://{username}:{password}@{proxy}:{port}/"\n')
+            filepointer.write(f'export ftp_proxy="ftp://{username}:{password}@{proxy}:{port}/"\n')
+            filepointer.write(f'export socks_proxy="socks://{username}:{password}@{proxy}:{port}/"\n')
+
+
+def write_to_snap(proxy, port, username, password, flag):
+    """
+    Writes the proxy configuration to Snap.
+
+    :param proxy: Proxy address
+    :param port: Proxy port
+    :param username: Username for authentication
+    :param password: Password for authentication
+    :param flag: Flag indicating whether to remove the configuration
+    """
+    if flag:
+        os.system("snap set system proxy.http=''")
+        os.system("snap set system proxy.https=''")
+    else:
+        os.system(f"snap set system proxy.http=http://{username}:{password}@{proxy}:{port}")
+        os.system(f"snap set system proxy.https=https://{username}:{password}@{proxy}:{port}")
+
+
+def write_to_git(proxy, port, username, password, flag):
+    """
+    Writes the proxy configuration to Git.
+
+    :param proxy: Proxy address
+    :param port: Proxy port
+    :param username: Username for authentication
+    :param password: Password for authentication
+    :param flag: Flag indicating whether to remove the configuration
+    """
+    if flag:
+        os.system("git config --global --unset http.proxy")
+        os.system("git config --global --unset https.proxy")
+    else:
+        os.system(f"git config --global http.proxy http://{username}:{password}@{proxy}:{port}")
+        os.system(f"git config --global https.proxy https://{username}:{password}@{proxy}:{port}")
+
+
+def select_proxies():
+    """
+    Allows the user to select which proxies to configure.
+    """
+    options = {
+        'apt': True,
+        'env': True,
+        'bashrc': True,
+        'snap': True,
+        'git': True
+    }
+
+    while True:
+        print("\nSelect which proxies to configure (toggle selection with numbers):")
+        for i, (key, value) in enumerate(options.items(), 1):
+            print(f"{i}. {'[x]' if value else '[ ]'} {key.capitalize()} Proxy")
+        print(f"{len(options) + 1}. Confirm selection")
+
+        try:
+            choice = int(input("\nToggle selection (1-5) or confirm (6): "))
+            if 1 <= choice <= len(options):
+                key = list(options.keys())[choice - 1]
+                options[key] = not options[key]
+            elif choice == len(options) + 1:
+                return options
+            else:
+                print("\nInvalid choice. Please choose a valid option.")
+        except ValueError:
+            print("\nInvalid input. Please enter a number between 1 and 6.")
 
 
 def set_proxy(flag):
+    """
+    Sets or removes the proxy configuration.
+
+    :param flag: Flag indicating whether to remove the configuration
+    """
     proxy, port, username, password = "", "", "", ""
     if not flag:
-        proxy = input("Enter proxy : ")
-        port = input("Enter port : ")
-        username = input("Enter username : ")
-        password = getpass.getpass("Enter password : ")
-    writeToApt(proxy, port, username, password, flag)
-    writeToEnv(proxy, port, username, password, flag)
-    writeToBashrc(proxy, port, username, password, flag)
+        proxy = input("Enter proxy: ")
+        port = input("Enter port: ")
+        username = input("Enter username: ")
+        password = getpass.getpass("Enter password: ")
+
+    write_to_apt(proxy, port, username, password, flag)
+    write_to_env(proxy, port, username, password, flag)
+    write_to_bashrc(proxy, port, username, password, flag)
+    write_to_snap(proxy, port, username, password, flag)
+    write_to_git(proxy, port, username, password, flag)
 
 
 def view_proxy():
-    # finds the size of apt file
-    size = os.path.getsize(apt_)
-    if size:
-        filepointer = open(apt_, "r")
-        string = filepointer.readline()
-        print('\nHTTP Proxy: ' + string[string.rfind('@')+1 : string.rfind(':')])
-        print('Port: ' + string[string.rfind(':')+1 : string.rfind('/')])
-        print('Username: ' + string.split('://')[1].split(':')[0])
-        print('Password: ' + '*' * len(string[string.rfind(':',0,string.rfind('@'))+1 : string.rfind('@')]))
-        filepointer.close()
+    """
+    Displays the current proxy configuration.
+    """
+    if os.path.getsize(APT_CONF):
+        with open(APT_CONF, "r") as filepointer:
+            line = filepointer.readline()
+            print('\nHTTP Proxy:', line[line.rfind('@') + 1:line.rfind(':')])
+            print('Port:', line[line.rfind(':') + 1:line.rfind('/')])
+            print('Username:', line.split('://')[1].split(':')[0])
+            print('Password:', '*' * len(line[line.rfind(':', 0, line.rfind('@')) + 1:line.rfind('@')]))
     else:
-        print("No proxy is set")
+        print("\nNo proxy is set")
+
 
 def restore_default():
-    # copy from backup to main
-    shutil.copy(apt_backup, apt_)
-    shutil.copy(env_backup, env_)
-    shutil.copy(bash_backup, bash_)
+    """
+    Restores the proxy configuration to the default state.
+    """
+    shutil.copy(APT_BACKUP, APT_CONF)
+    shutil.copy(ENV_BACKUP, ENVIRONMENT)
+    shutil.copy(BASH_BACKUP, BASH_BASHRC)
 
 
-# The main Function Starts
+def main():
+    """
+    Main function that handles the program flow.
+    """
+    if not os.path.isdir("./.backup_proxy"):
+        os.makedirs("./.backup_proxy")
+        if os.path.isfile(APT_CONF):
+            shutil.copyfile(APT_CONF, APT_BACKUP)
+        shutil.copyfile(ENVIRONMENT, ENV_BACKUP)
+        shutil.copyfile(BASH_BASHRC, BASH_BACKUP)
+
+    menu_options = {
+        1: 'Set Proxy',
+        2: 'Remove Proxy',
+        3: 'View Current Proxy',
+        4: 'Restore Default',
+        5: 'Select Proxies to Configure',
+        6: 'Exit'
+    }
+
+    actions = {
+        1: lambda: set_proxy(flag=0),
+        2: lambda: set_proxy(flag=1),
+        3: view_proxy,
+        4: restore_default,
+        6: sys.exit
+    }
+
+    selected_proxies = {
+        'apt': True,
+        'env': True,
+        'bashrc': True,
+        'snap': True,
+        'git': True
+    }
+
+    while True:
+        print("\nPlease run this program as Super user (sudo)\n")
+        for key in sorted(menu_options):
+            print(f"{key}. {menu_options[key]}")
+
+        try:
+            choice = int(input("\nChoose an option (1, 2, 3, 4, 5, or 6) and then press ENTER: "))
+            if choice == 5:
+                selected_proxies = select_proxies()
+            elif choice in actions:
+                actions[choice]()
+                if choice == 6:
+                    break
+            else:
+                print("\nInvalid choice. Please choose a valid option.")
+        except ValueError:
+            print("\nInvalid input. Please enter a number between 1 and 6.")
+
+        print("\nDONE!\n")
 
 
 if __name__ == "__main__":
-
-    # create backup	if not present
-    if not os.path.isdir("./.backup_proxy"):
-        os.makedirs("./.backup_proxy")
-        if os.path.isfile(apt_):
-            shutil.copyfile(apt_, apt_backup)
-        shutil.copyfile(env_, env_backup)
-        shutil.copyfile(bash_, bash_backup)
-
-    # choice
-    print("Please run this program as Super user(sudo)\n")
-    print("1:) Set Proxy")
-    print("2:) Remove Proxy")
-    print("3:) View Current Proxy")
-    print("4:) Restore Default")
-    print("5:) Exit")
-    choice = int(input("\nChoice (1/2/3/4/5) : "))
-
-    if(choice == 1):
-        set_proxy(flag=0)
-    elif(choice == 2):
-        set_proxy(flag=1)
-    elif(choice == 3):
-        view_proxy()
-    elif(choice == 4):
-        restore_default()
-    else:
-        sys.exit()
-
-    print("DONE!")
+    main()
