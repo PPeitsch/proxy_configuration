@@ -28,19 +28,22 @@ ENVIRONMENT = r'/etc/environment'
 ENV_BACKUP = r'./.backup_proxy/env.txt'
 
 
-# This function directly writes to the apt.conf file
-def writeToApt(proxy, port, username, password, flag):
-    filepointer = open(APT_CONF, "w")
-    if not flag:
-        filepointer.write(
-            'Acquire::http::proxy "http://{0}:{1}@{2}:{3}/";\n'.format(username, password, proxy, port))
-        filepointer.write(
-            'Acquire::https::proxy  "https://{0}:{1}@{2}:{3}/";\n'.format(username, password, proxy, port))
-        filepointer.write(
-            'Acquire::ftp::proxy  "ftp://{0}:{1}@{2}:{3}/";\n'.format(username, password, proxy, port))
-        filepointer.write(
-            'Acquire::socks::proxy  "socks://{0}:{1}@{2}:{3}/";\n'.format(username, password, proxy, port))
-    filepointer.close()
+def write_to_apt(proxy, port, username, password, flag):
+    """
+    Writes the proxy configuration to the apt.conf file.
+
+    :param proxy: Proxy address
+    :param port: Proxy port
+    :param username: Username for authentication
+    :param password: Password for authentication
+    :param flag: Flag indicating whether to remove the configuration
+    """
+    with open(APT_CONF, "w") as filepointer:
+        if not flag:
+            filepointer.write(f'Acquire::http::proxy "http://{username}:{password}@{proxy}:{port}/";\n')
+            filepointer.write(f'Acquire::https::proxy "https://{username}:{password}@{proxy}:{port}/";\n')
+            filepointer.write(f'Acquire::ftp::proxy "ftp://{username}:{password}@{proxy}:{port}/";\n')
+            filepointer.write(f'Acquire::socks::proxy "socks://{username}:{password}@{proxy}:{port}/";\n')
 
 
 # This function writes to the environment file
@@ -101,7 +104,7 @@ def set_proxy(flag):
         port = input("Enter port : ")
         username = input("Enter username : ")
         password = getpass.getpass("Enter password : ")
-    writeToApt(proxy, port, username, password, flag)
+    write_to_apt(proxy, port, username, password, flag)
     writeToEnv(proxy, port, username, password, flag)
     writeToBashrc(proxy, port, username, password, flag)
 
