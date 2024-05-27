@@ -72,29 +72,30 @@ def write_to_env(proxy, port, username, password, flag):
             filepointer.write(f'socks_proxy="socks://{username}:{password}@{proxy}:{port}/"\n')
 
 
-# This function will write to the
-def writeToBashrc(proxy, port, username, password, flag):
-    # find and delete http:// , https://, ftp://
+def write_to_bashrc(proxy, port, username, password, flag):
+    """
+    Writes the proxy configuration to the bash.bashrc file.
+
+    :param proxy: Proxy address
+    :param port: Proxy port
+    :param username: Username for authentication
+    :param password: Password for authentication
+    :param flag: Flag indicating whether to remove the configuration
+    """
     with open(BASH_BASHRC, "r+") as opened_file:
         lines = opened_file.readlines()
         opened_file.seek(0)
         for line in lines:
-            if r"http://" not in line and r'"https://' not in line and r"ftp://" not in line and r"socks://" not in line:
+            if all(protocol not in line for protocol in ["http://", "https://", "ftp://", "socks://"]):
                 opened_file.write(line)
         opened_file.truncate()
 
-    # writing starts
     if not flag:
-        filepointer = open(BASH_BASHRC, "a")
-        filepointer.write(
-            'export http_proxy="http://{0}:{1}@{2}:{3}/"\n'.format(username, password, proxy, port))
-        filepointer.write(
-            'export https_proxy="https://{0}:{1}@{2}:{3}/"\n'.format(username, password, proxy, port))
-        filepointer.write(
-            'export ftp_proxy="ftp://{0}:{1}@{2}:{3}/"\n'.format(username, password, proxy, port))
-        filepointer.write(
-            'export socks_proxy="socks://{0}:{1}@{2}:{3}/"\n'.format(username, password, proxy, port))
-        filepointer.close()
+        with open(BASH_BASHRC, "a") as filepointer:
+            filepointer.write(f'export http_proxy="http://{username}:{password}@{proxy}:{port}/"\n')
+            filepointer.write(f'export https_proxy="https://{username}:{password}@{proxy}:{port}/"\n')
+            filepointer.write(f'export ftp_proxy="ftp://{username}:{password}@{proxy}:{port}/"\n')
+            filepointer.write(f'export socks_proxy="socks://{username}:{password}@{proxy}:{port}/"\n')
 
 
 def set_proxy(flag):
@@ -106,7 +107,7 @@ def set_proxy(flag):
         password = getpass.getpass("Enter password : ")
     write_to_apt(proxy, port, username, password, flag)
     write_to_env(proxy, port, username, password, flag)
-    writeToBashrc(proxy, port, username, password, flag)
+    write_to_bashrc(proxy, port, username, password, flag)
 
 
 def view_proxy():
