@@ -134,6 +134,37 @@ def write_to_git(proxy, port, username, password, flag):
         os.system(f"git config --global https.proxy https://{username}:{password}@{proxy}:{port}")
 
 
+def select_proxies():
+    """
+    Allows the user to select which proxies to configure.
+    """
+    options = {
+        'apt': True,
+        'env': True,
+        'bashrc': True,
+        'snap': True,
+        'git': True
+    }
+
+    while True:
+        print("\nSelect which proxies to configure (toggle selection with numbers):")
+        for i, (key, value) in enumerate(options.items(), 1):
+            print(f"{i}. {'[x]' if value else '[ ]'} {key.capitalize()} Proxy")
+        print(f"{len(options) + 1}. Confirm selection")
+
+        try:
+            choice = int(input("\nToggle selection (1-5) or confirm (6): "))
+            if 1 <= choice <= len(options):
+                key = list(options.keys())[choice - 1]
+                options[key] = not options[key]
+            elif choice == len(options) + 1:
+                return options
+            else:
+                print("\nInvalid choice. Please choose a valid option.")
+        except ValueError:
+            print("\nInvalid input. Please enter a number between 1 and 6.")
+
+
 def set_proxy(flag):
     """
     Sets or removes the proxy configuration.
@@ -194,7 +225,8 @@ def main():
         2: 'Remove Proxy',
         3: 'View Current Proxy',
         4: 'Restore Default',
-        5: 'Exit'
+        5: 'Select Proxies to Configure',
+        6: 'Exit'
     }
 
     actions = {
@@ -202,7 +234,15 @@ def main():
         2: lambda: set_proxy(flag=1),
         3: view_proxy,
         4: restore_default,
-        5: sys.exit
+        6: sys.exit
+    }
+
+    selected_proxies = {
+        'apt': True,
+        'env': True,
+        'bashrc': True,
+        'snap': True,
+        'git': True
     }
 
     while True:
@@ -211,15 +251,17 @@ def main():
             print(f"{key}. {menu_options[key]}")
 
         try:
-            choice = int(input("\nChoose an option (1, 2, 3, 4, or 5) and then press ENTER: "))
-            if choice in actions:
+            choice = int(input("\nChoose an option (1, 2, 3, 4, 5, or 6) and then press ENTER: "))
+            if choice == 5:
+                selected_proxies = select_proxies()
+            elif choice in actions:
                 actions[choice]()
-                if choice == 5:
+                if choice == 6:
                     break
             else:
                 print("\nInvalid choice. Please choose a valid option.")
         except ValueError:
-            print("\nInvalid input. Please enter a number between 1 and 5.")
+            print("\nInvalid input. Please enter a number between 1 and 6.")
 
         print("\nDONE!\n")
 
