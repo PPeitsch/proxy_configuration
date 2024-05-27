@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/env python3
 
 """
 created by :
@@ -21,10 +21,10 @@ Three files will be modified
 # This files takes the location as input and writes the proxy authentication
 
 import getpass  # for taking password input
-import shutil  # for copying file
-import sys
 import os
 import os.path  # for checking if file is present or not
+import shutil  # for copying file
+import sys
 
 apt_ = r'/etc/apt/apt.conf'
 apt_backup = r'./.backup_proxy/apt.txt'
