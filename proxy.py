@@ -99,12 +99,17 @@ def write_to_bashrc(proxy, port, username, password, flag):
 
 
 def set_proxy(flag):
+    """
+    Sets or removes the proxy configuration.
+
+    :param flag: Flag indicating whether to remove the configuration
+    """
     proxy, port, username, password = "", "", "", ""
     if not flag:
-        proxy = input("Enter proxy : ")
-        port = input("Enter port : ")
-        username = input("Enter username : ")
-        password = getpass.getpass("Enter password : ")
+        proxy = input("Enter proxy: ")
+        port = input("Enter port: ")
+        username = input("Enter username: ")
+        password = getpass.getpass("Enter password: ")
     write_to_apt(proxy, port, username, password, flag)
     write_to_env(proxy, port, username, password, flag)
     write_to_bashrc(proxy, port, username, password, flag)
