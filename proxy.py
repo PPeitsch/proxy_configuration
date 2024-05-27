@@ -158,28 +158,31 @@ def main():
         5: 'Exit'
     }
 
-    print("\nPlease run this program as Super user (sudo)\n")
-    for key in sorted(menu_options):
-        print(f"{key}. {menu_options[key]}")
+    actions = {
+        1: lambda: set_proxy(flag=0),
+        2: lambda: set_proxy(flag=1),
+        3: view_proxy,
+        4: restore_default,
+        5: sys.exit
+    }
 
-    try:
-        choice = int(input("\nChoose an option (1, 2, 3, 4, or 5) and then press ENTER: "))
-        if choice == 1:
-            set_proxy(flag=0)
-        elif choice == 2:
-            set_proxy(flag=1)
-        elif choice == 3:
-            view_proxy()
-        elif choice == 4:
-            restore_default()
-        elif choice == 5:
-            sys.exit()
-        else:
-            print("\nInvalid choice. Please choose a valid option.")
-    except ValueError:
-        print("\nInvalid input. Please enter a number between 1 and 5.")
+    while True:
+        print("\nPlease run this program as Super user (sudo)\n")
+        for key in sorted(menu_options):
+            print(f"{key}. {menu_options[key]}")
 
-    print("\nDONE!\n")
+        try:
+            choice = int(input("\nChoose an option (1, 2, 3, 4, or 5) and then press ENTER: "))
+            if choice in actions:
+                actions[choice]()
+                if choice == 5:
+                    break
+            else:
+                print("\nInvalid choice. Please choose a valid option.")
+        except ValueError:
+            print("\nInvalid input. Please enter a number between 1 and 5.")
+
+        print("\nDONE!\n")
 
 
 if __name__ == "__main__":
