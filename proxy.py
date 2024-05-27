@@ -127,22 +127,22 @@ def view_proxy():
             print('Username:', line.split('://')[1].split(':')[0])
             print('Password:', '*' * len(line[line.rfind(':', 0, line.rfind('@')) + 1:line.rfind('@')]))
     else:
-        print("No proxy is set")
+        print("\nNo proxy is set")
 
 
 def restore_default():
-    # copy from backup to main
+    """
+    Restores the proxy configuration to the default state.
+    """
     shutil.copy(APT_BACKUP, APT_CONF)
     shutil.copy(ENV_BACKUP, ENVIRONMENT)
     shutil.copy(BASH_BACKUP, BASH_BASHRC)
 
 
-# The main Function Starts
-
-
-if __name__ == "__main__":
-
-    # create backup	if not present
+def main():
+    """
+    Main function that handles the program flow.
+    """
     if not os.path.isdir("./.backup_proxy"):
         os.makedirs("./.backup_proxy")
         if os.path.isfile(APT_CONF):
@@ -150,24 +150,37 @@ if __name__ == "__main__":
         shutil.copyfile(ENVIRONMENT, ENV_BACKUP)
         shutil.copyfile(BASH_BASHRC, BASH_BACKUP)
 
-    # choice
-    print("Please run this program as Super user(sudo)\n")
-    print("1:) Set Proxy")
-    print("2:) Remove Proxy")
-    print("3:) View Current Proxy")
-    print("4:) Restore Default")
-    print("5:) Exit")
-    choice = int(input("\nChoice (1/2/3/4/5) : "))
+    menu_options = {
+        1: 'Set Proxy',
+        2: 'Remove Proxy',
+        3: 'View Current Proxy',
+        4: 'Restore Default',
+        5: 'Exit'
+    }
 
-    if choice == 1:
-        set_proxy(flag=0)
-    elif choice == 2:
-        set_proxy(flag=1)
-    elif choice == 3:
-        view_proxy()
-    elif choice == 4:
-        restore_default()
-    else:
-        sys.exit()
+    print("\nPlease run this program as Super user (sudo)\n")
+    for key in sorted(menu_options):
+        print(f"{key}. {menu_options[key]}")
 
-    print("DONE!")
+    try:
+        choice = int(input("\nChoose an option (1, 2, 3, 4, or 5) and then press ENTER: "))
+        if choice == 1:
+            set_proxy(flag=0)
+        elif choice == 2:
+            set_proxy(flag=1)
+        elif choice == 3:
+            view_proxy()
+        elif choice == 4:
+            restore_default()
+        elif choice == 5:
+            sys.exit()
+        else:
+            print("\nInvalid choice. Please choose a valid option.")
+    except ValueError:
+        print("\nInvalid input. Please enter a number between 1 and 5.")
+
+    print("\nDONE!\n")
+
+
+if __name__ == "__main__":
+    main()
