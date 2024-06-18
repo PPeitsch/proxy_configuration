@@ -117,7 +117,7 @@ def write_to_snap(proxy, port, username, password, flag):
     else:
         auth = f"{username}:{password}@" if username and password else ""
         os.system(f"snap set system proxy.http=http://{auth}{proxy}:{port}")
-        os.system(f"snap set system proxy.https=https://{auth}{proxy}:{port}")
+        os.system(f"snap set system proxy.https=http://{auth}{proxy}:{port}")
 
 
 def write_to_git(proxy, port, username, password, flag):
