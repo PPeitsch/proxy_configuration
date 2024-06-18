@@ -40,10 +40,11 @@ def write_to_apt(proxy, port, username, password, flag):
     """
     with open(APT_CONF, "w") as filepointer:
         if not flag:
-            filepointer.write(f'Acquire::http::proxy "http://{username}:{password}@{proxy}:{port}/";\n')
-            filepointer.write(f'Acquire::https::proxy "https://{username}:{password}@{proxy}:{port}/";\n')
-            filepointer.write(f'Acquire::ftp::proxy "ftp://{username}:{password}@{proxy}:{port}/";\n')
-            filepointer.write(f'Acquire::socks::proxy "socks://{username}:{password}@{proxy}:{port}/";\n')
+            auth = f"{username}:{password}@" if username and password else ""
+            filepointer.write(f'Acquire::http::proxy "http://{auth}{proxy}:{port}/";\n')
+            filepointer.write(f'Acquire::https::proxy "https://{auth}{proxy}:{port}/";\n')
+            filepointer.write(f'Acquire::ftp::proxy "ftp://{auth}{proxy}:{port}/";\n')
+            filepointer.write(f'Acquire::socks::proxy "socks://{auth}{proxy}:{port}/";\n')
 
 
 def write_to_env(proxy, port, username, password, flag):
@@ -66,10 +67,11 @@ def write_to_env(proxy, port, username, password, flag):
 
     if not flag:
         with open(ENVIRONMENT, "a") as filepointer:
-            filepointer.write(f'http_proxy="http://{username}:{password}@{proxy}:{port}/"\n')
-            filepointer.write(f'https_proxy="https://{username}:{password}@{proxy}:{port}/"\n')
-            filepointer.write(f'ftp_proxy="ftp://{username}:{password}@{proxy}:{port}/"\n')
-            filepointer.write(f'socks_proxy="socks://{username}:{password}@{proxy}:{port}/"\n')
+            auth = f"{username}:{password}@" if username and password else ""
+            filepointer.write(f'http_proxy="http://{auth}{proxy}:{port}/"\n')
+            filepointer.write(f'https_proxy="https://{auth}{proxy}:{port}/"\n')
+            filepointer.write(f'ftp_proxy="ftp://{auth}{proxy}:{port}/"\n')
+            filepointer.write(f'socks_proxy="socks://{auth}{proxy}:{port}/"\n')
 
 
 def write_to_bashrc(proxy, port, username, password, flag):
@@ -92,10 +94,11 @@ def write_to_bashrc(proxy, port, username, password, flag):
 
     if not flag:
         with open(BASH_BASHRC, "a") as filepointer:
-            filepointer.write(f'export http_proxy="http://{username}:{password}@{proxy}:{port}/"\n')
-            filepointer.write(f'export https_proxy="https://{username}:{password}@{proxy}:{port}/"\n')
-            filepointer.write(f'export ftp_proxy="ftp://{username}:{password}@{proxy}:{port}/"\n')
-            filepointer.write(f'export socks_proxy="socks://{username}:{password}@{proxy}:{port}/"\n')
+            auth = f"{username}:{password}@" if username and password else ""
+            filepointer.write(f'export http_proxy="http://{auth}{proxy}:{port}/"\n')
+            filepointer.write(f'export https_proxy="https://{auth}{proxy}:{port}/"\n')
+            filepointer.write(f'export ftp_proxy="ftp://{auth}{proxy}:{port}/"\n')
+            filepointer.write(f'export socks_proxy="socks://{auth}{proxy}:{port}/"\n')
 
 
 def write_to_snap(proxy, port, username, password, flag):
@@ -112,8 +115,9 @@ def write_to_snap(proxy, port, username, password, flag):
         os.system("snap set system proxy.http=''")
         os.system("snap set system proxy.https=''")
     else:
-        os.system(f"snap set system proxy.http=http://{username}:{password}@{proxy}:{port}")
-        os.system(f"snap set system proxy.https=https://{username}:{password}@{proxy}:{port}")
+        auth = f"{username}:{password}@" if username and password else ""
+        os.system(f"snap set system proxy.http=http://{auth}{proxy}:{port}")
+        os.system(f"snap set system proxy.https=http://{auth}{proxy}:{port}")
 
 
 def write_to_git(proxy, port, username, password, flag):
@@ -130,8 +134,9 @@ def write_to_git(proxy, port, username, password, flag):
         os.system("git config --global --unset http.proxy")
         os.system("git config --global --unset https.proxy")
     else:
-        os.system(f"git config --global http.proxy http://{username}:{password}@{proxy}:{port}")
-        os.system(f"git config --global https.proxy https://{username}:{password}@{proxy}:{port}")
+        auth = f"{username}:{password}@" if username and password else ""
+        os.system(f"git config --global http.proxy http://{auth}{proxy}:{port}")
+        os.system(f"git config --global https.proxy https://{auth}{proxy}:{port}")
 
 
 def select_proxies():
@@ -192,10 +197,14 @@ def view_proxy():
     if os.path.getsize(APT_CONF):
         with open(APT_CONF, "r") as filepointer:
             line = filepointer.readline()
-            print('\nHTTP Proxy:', line[line.rfind('@') + 1:line.rfind(':')])
-            print('Port:', line[line.rfind(':') + 1:line.rfind('/')])
-            print('Username:', line.split('://')[1].split(':')[0])
-            print('Password:', '*' * len(line[line.rfind(':', 0, line.rfind('@')) + 1:line.rfind('@')]))
+            if "@" in line:
+                print('\nHTTP Proxy:', line[line.rfind('@') + 1:line.rfind(':')])
+                print('Port:', line[line.rfind(':') + 1:line.rfind('/')])
+                print('Username:', line.split('://')[1].split(':')[0])
+                print('Password:', '*' * len(line[line.rfind(':', 0, line.rfind('@')) + 1:line.rfind('@')]))
+            else:
+                print('HTTP Proxy:', line[line.rfind('http'):line.rfind(':')])
+                print('Port:', line[line.rfind(':') + 1:line.rfind('/')])
     else:
         print("\nNo proxy is set")
 
